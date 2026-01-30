@@ -20,6 +20,24 @@
             flex-direction: column;
             align-items: center;
             padding: 20px;
+            transition: background 0.5s ease;
+        }
+
+        /* Background themes for each player's turn */
+        body.theme-red {
+            background: linear-gradient(135deg, #f5b5a8 0%, #e89485 100%);
+        }
+
+        body.theme-blue {
+            background: linear-gradient(135deg, #a8d8f0 0%, #7ec8e8 100%);
+        }
+
+        body.theme-green {
+            background: linear-gradient(135deg, #b8e6be 0%, #8fd99a 100%);
+        }
+
+        body.theme-yellow {
+            background: linear-gradient(135deg, #f7e6a0 0%, #f0d56a 100%);
         }
 
         h1 {
@@ -131,17 +149,17 @@
         }
 
         .base-blue {
-            background: #4ecdc4;
+            background: #5cc8d8;
             border: none;
         }
 
         .base-red {
-            background: #eb5757;
+            background: #e87878;
             border: none;
         }
 
         .base-green {
-            background: #6bcb77;
+            background: #78c880;
             border: none;
         }
 
@@ -151,20 +169,20 @@
         }
 
         .home-blue {
-            background: #4ecdc4;
+            background: #5cc8d8;
         }
 
         .home-red {
-            background: #eb5757;
+            background: #e87878;
         }
 
         .home-green {
-            background: #6bcb77;
+            background: #78c880;
         }
 
-        /* Center/Home */
+        /* Center/Home - corner cells stay dark (non-playable) */
         .center {
-            background: transparent;
+            background: #1a1a2e;
             border: none;
         }
 
@@ -182,78 +200,193 @@
         }
 
         .start-blue {
-            background: #4ecdc4;
+            background: #5cc8d8;
         }
 
         .start-red {
-            background: #eb5757;
+            background: #e87878;
         }
 
         .start-green {
-            background: #6bcb77;
+            background: #78c880;
         }
 
         /* Token holder in base */
         .token-holder {
-            width: 70%;
-            height: 70%;
-            background: rgba(255, 255, 255, 0.7);
-            border-radius: 50%;
+            width: 85%;
+            height: 85%;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 20%;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        /* Tokens */
+        /* Tokens - 3D style */
         .token {
-            width: 80%;
-            height: 80%;
+            width: 90%;
+            height: 90%;
             border-radius: 50%;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
             position: relative;
             z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform-style: preserve-3d;
+        }
+
+        /* Animated token for step-by-step movement */
+        .token-animated {
+            position: absolute;
+            z-index: 100;
+            pointer-events: none;
+            transition: left 0.15s ease-out, top 0.15s ease-out;
+        }
+
+        /* Token base (bottom layer for 3D effect) */
+        .token-base {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            top: 5px;
+            left: 0;
+            z-index: -1;
+        }
+
+        /* Eyes on tokens */
+        .token-eye {
+            position: absolute;
+            width: 32%;
+            height: 32%;
+            background: radial-gradient(circle at 35% 35%, white 0%, #f8f8f8 30%, #e8e8e8 60%, #c0c0c0 100%);
+            border-radius: 50%;
+            border: 2px solid #444;
+            top: 20%;
+            box-shadow:
+                inset -3px -3px 6px rgba(0, 0, 0, 0.25),
+                inset 2px 2px 4px rgba(255, 255, 255, 0.8),
+                2px 3px 5px rgba(0, 0, 0, 0.3);
+            z-index: 5;
+        }
+
+        .token-eye.left {
+            left: 12%;
+        }
+
+        .token-eye.right {
+            right: 12%;
+        }
+
+        /* Pupil */
+        .token-eye::after {
+            content: '';
+            position: absolute;
+            width: 45%;
+            height: 45%;
+            background: radial-gradient(circle at 40% 40%, #555, #111);
+            border-radius: 50%;
+            top: 28%;
+            left: 28%;
+            box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.3);
+        }
+
+        /* Eye highlight */
+        .token-eye::before {
+            content: '';
+            position: absolute;
+            width: 20%;
+            height: 20%;
+            background: white;
+            border-radius: 50%;
+            top: 15%;
+            left: 20%;
+            z-index: 6;
         }
 
         .token:hover {
-            transform: scale(1.1);
+            transform: scale(1.15) translateY(-3px);
         }
 
         .token.movable {
-            animation: pulse 1s infinite;
-            box-shadow: 0 0 10px 3px rgba(255, 255, 255, 0.8);
+            animation: pulse3d 1s infinite;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
         }
 
-        @keyframes pulse {
+        @keyframes pulse3d {
 
             0%,
             100% {
-                transform: scale(1);
+                transform: scale(1) translateY(0);
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
             }
 
             50% {
-                transform: scale(1.15);
+                transform: scale(1.15) translateY(-4px);
+                box-shadow: 0 12px 25px rgba(0, 0, 0, 0.4);
             }
         }
 
         .token-yellow {
-            background: radial-gradient(circle at 30% 30%, #fff7a0, #f7d44c, #c9a227);
-            border: 2px solid #a08020;
+            background: linear-gradient(145deg, #fff7a0 0%, #f7d44c 40%, #d4a520 100%);
+            border: 3px solid #8a6914;
+            box-shadow:
+                0 4px 0 #a07818,
+                0 6px 10px rgba(0, 0, 0, 0.3),
+                inset 0 -8px 15px rgba(0, 0, 0, 0.15),
+                inset 0 8px 15px rgba(255, 255, 255, 0.4);
+        }
+
+        .token-yellow .token-base {
+            background: #8a6914;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
         }
 
         .token-blue {
-            background: radial-gradient(circle at 30% 30%, #a0f7f0, #4ecdc4, #2a9d8f);
-            border: 2px solid #1a6b63;
+            background: linear-gradient(145deg, #c8f0f8 0%, #5ac8c8 40%, #3aa8b0 100%);
+            border: 3px solid #2a7880;
+            box-shadow:
+                0 4px 0 #206068,
+                0 6px 10px rgba(0, 0, 0, 0.3),
+                inset 0 -8px 15px rgba(0, 0, 0, 0.15),
+                inset 0 8px 15px rgba(255, 255, 255, 0.4);
+        }
+
+        .token-blue .token-base {
+            background: #2a7880;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
         }
 
         .token-red {
-            background: radial-gradient(circle at 30% 30%, #ffa0a0, #eb5757, #c53030);
-            border: 2px solid #8b2020;
+            background: linear-gradient(145deg, #ffc8c0 0%, #e87070 40%, #c85050 100%);
+            border: 3px solid #8a3030;
+            box-shadow:
+                0 4px 0 #702828,
+                0 6px 10px rgba(0, 0, 0, 0.3),
+                inset 0 -8px 15px rgba(0, 0, 0, 0.15),
+                inset 0 8px 15px rgba(255, 255, 255, 0.4);
+        }
+
+        .token-red .token-base {
+            background: #8a3030;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
         }
 
         .token-green {
-            background: radial-gradient(circle at 30% 30%, #a0ffa0, #6bcb77, #4a9c54);
-            border: 2px solid #2a6b34;
+            background: linear-gradient(145deg, #c8f8c8 0%, #70c878 40%, #50a858 100%);
+            border: 3px solid #306838;
+            box-shadow:
+                0 4px 0 #285030,
+                0 6px 10px rgba(0, 0, 0, 0.3),
+                inset 0 -8px 15px rgba(0, 0, 0, 0.15),
+                inset 0 8px 15px rgba(255, 255, 255, 0.4);
+        }
+
+        .token-green .token-base {
+            background: #306838;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
         }
 
         /* Multiple tokens indicator */
@@ -286,29 +419,30 @@
         #dice-container {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
             background: white;
-            padding: 10px 20px;
+            padding: 15px 25px;
             border-radius: 15px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
 
-        #dice {
+        #dice-display {
             width: 60px;
             height: 60px;
-            background: white;
+            background: linear-gradient(145deg, #ffffff 0%, #f0f0f0 100%);
             border: 3px solid #333;
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2rem;
+            font-size: 2.5rem;
             font-weight: bold;
-            position: relative;
+            color: #333;
+            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
         }
 
-        #dice.rolling {
-            animation: shake 0.3s infinite;
+        #dice-display.rolling {
+            animation: shake 0.1s infinite;
         }
 
         @keyframes shake {
@@ -319,20 +453,12 @@
             }
 
             25% {
-                transform: rotate(-15deg);
+                transform: rotate(-5deg);
             }
 
             75% {
-                transform: rotate(15deg);
+                transform: rotate(5deg);
             }
-        }
-
-        .dice-dot {
-            width: 10px;
-            height: 10px;
-            background: #333;
-            border-radius: 50%;
-            position: absolute;
         }
 
         #roll-btn {
@@ -527,6 +653,91 @@
             margin-top: 20px;
         }
 
+        /* Settings button */
+        #settings-btn {
+            background: #95a5a6;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #settings-btn:hover {
+            background: #7f8c8d;
+        }
+
+        /* Settings modal */
+        #settings-modal {
+            display: none;
+            visibility: hidden;
+            opacity: 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #settings-modal.open {
+            display: flex;
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .settings-content {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            min-width: 280px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .settings-content h3 {
+            margin: 0 0 20px 0;
+            color: #333;
+            text-align: center;
+        }
+
+        .settings-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .settings-row:last-of-type {
+            border-bottom: none;
+        }
+
+        .settings-row label {
+            font-size: 1rem;
+            color: #333;
+        }
+
+        .settings-close-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            font-size: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+
         /* Responsive */
         @media (max-width: 600px) {
             #board {
@@ -576,32 +787,18 @@
 
         <div id="controls">
             <div id="dice-container">
-                <div id="dice">?</div>
+                <div id="dice-display">?</div>
             </div>
             <button id="roll-btn" onclick="rollDice()">БРОСОК</button>
-
-            <div class="toggle-container">
-                <span class="toggle-label">Ручной ввод</span>
-                <div class="toggle" id="manual-toggle" onclick="toggleManualMode()"></div>
-            </div>
 
             <div id="manual-dice-container" style="display: none;">
                 <input type="number" id="manual-dice-input" min="1" max="6" placeholder="1-6">
                 <button id="manual-dice-btn" onclick="applyManualDice()">Применить</button>
             </div>
 
-            <div class="delay-container">
-                <label>Задержка:</label>
-                <select id="delay-select" onchange="updateDelay()">
-                    <option value="1">1 сек</option>
-                    <option value="2">2 сек</option>
-                    <option value="3" selected>3 сек</option>
-                    <option value="4">4 сек</option>
-                    <option value="5">5 сек</option>
-                </select>
-                <span id="countdown"></span>
-            </div>
+            <span id="countdown"></span>
 
+            <button id="settings-btn" onclick="openSettings()">⚙</button>
             <button id="new-game-btn" onclick="showSetup()">Новая игра</button>
         </div>
     </div>
@@ -614,6 +811,31 @@
         </div>
     </div>
 
+    <!-- Settings Modal -->
+    <div id="settings-modal">
+        <div class="settings-content">
+            <h3>Настройки</h3>
+
+            <div class="settings-row">
+                <label>Ручной ввод кубика</label>
+                <div class="toggle" id="manual-toggle" onclick="toggleManualMode()"></div>
+            </div>
+
+            <div class="settings-row">
+                <label>Задержка автопропуска</label>
+                <select id="delay-select" onchange="updateDelay()">
+                    <option value="1" selected>1 сек</option>
+                    <option value="2">2 сек</option>
+                    <option value="3">3 сек</option>
+                    <option value="4">4 сек</option>
+                    <option value="5">5 сек</option>
+                </select>
+            </div>
+
+            <button class="settings-close-btn" onclick="closeSettings()">Закрыть</button>
+        </div>
+    </div>
+
     <script>
         // Game state
         let playerCount = 4;
@@ -623,9 +845,11 @@
         let manualMode = false;
         let players = [];
         let canRollAgain = false;
-        let skipDelay = 3; // секунды задержки перед автопропуском
+        let skipDelay = 1; // секунды задержки перед автопропуском
         let skipTimer = null;
         let countdownInterval = null;
+        let isAnimating = false; // блокировка во время анимации
+        let consecutiveSixes = 0; // счётчик шестёрок подряд
 
         // Player configurations
         const PLAYER_COLORS = ['red', 'blue', 'green', 'yellow'];
@@ -641,27 +865,31 @@
         const MAIN_PATH_LENGTH = 52;
 
         // Starting positions on main path for each color
+        // Yellow: top-left base, starts at position 0 [6,1]
+        // Blue: top-right base, starts at position 13 [1,8]
+        // Green: bottom-right base, starts at position 26 [8,13]
+        // Red: bottom-left base, starts at position 39 [13,6]
         const START_POSITIONS = {
-            'red': 0,
+            'yellow': 0,
             'blue': 13,
             'green': 26,
-            'yellow': 39
+            'red': 39
         };
 
         // Home entry positions (before entering home column)
         const HOME_ENTRY = {
-            'red': 50,
+            'yellow': 50,
             'blue': 11,
             'green': 24,
-            'yellow': 37
+            'red': 37
         };
 
-        // Safe spots on main path
-        const SAFE_SPOTS = [0, 8, 13, 21, 26, 34, 39, 47];
+        // Safe spots on main path (only start positions are safe)
+        const SAFE_SPOTS = [0, 13, 26, 39];
 
-        // Board cell coordinates (row, col) for main path
+        // Board cell coordinates (row, col) for main path - clockwise
         const MAIN_PATH_COORDS = [
-            // Red start area exit and path (0-12)
+            // Yellow start area exit and path (0-12)
             [6, 1], [6, 2], [6, 3], [6, 4], [6, 5], // 0-4
             [5, 6], [4, 6], [3, 6], [2, 6], [1, 6], [0, 6], // 5-10
             [0, 7], [0, 8], // 11-12
@@ -676,7 +904,7 @@
             [9, 8], [10, 8], [11, 8], [12, 8], [13, 8], [14, 8], // 31-36
             [14, 7], [14, 6], // 37-38
 
-            // Yellow start area exit and path (39-51)
+            // Red start area exit and path (39-51)
             [13, 6], [12, 6], [11, 6], [10, 6], [9, 6], // 39-43
             [8, 5], [8, 4], [8, 3], [8, 2], [8, 1], [8, 0], // 44-49
             [7, 0], [6, 0] // 50-51
@@ -684,10 +912,10 @@
 
         // Home path coordinates for each color (6 cells each, last is center)
         const HOME_PATHS = {
-            'red': [[7, 1], [7, 2], [7, 3], [7, 4], [7, 5], [7, 6]],
+            'yellow': [[7, 1], [7, 2], [7, 3], [7, 4], [7, 5], [7, 6]],
             'blue': [[1, 7], [2, 7], [3, 7], [4, 7], [5, 7], [6, 7]],
             'green': [[7, 13], [7, 12], [7, 11], [7, 10], [7, 9], [7, 8]],
-            'yellow': [[13, 7], [12, 7], [11, 7], [10, 7], [9, 7], [8, 7]]
+            'red': [[13, 7], [12, 7], [11, 7], [10, 7], [9, 7], [8, 7]]
         };
 
         // Base positions for each color's 4 tokens
@@ -864,6 +1092,7 @@
             diceValue = 0;
             diceRolled = false;
             canRollAgain = false;
+            consecutiveSixes = 0;
 
             // Clear any existing timers
             if (skipTimer) clearTimeout(skipTimer);
@@ -882,6 +1111,9 @@
             // Clear any existing timers
             if (skipTimer) clearTimeout(skipTimer);
             if (countdownInterval) clearInterval(countdownInterval);
+
+            // Reset background to default
+            document.body.classList.remove('theme-red', 'theme-blue', 'theme-green', 'theme-yellow');
 
             document.getElementById('setup-screen').style.display = 'block';
             document.getElementById('game-container').style.display = 'none';
@@ -927,30 +1159,24 @@
                     if (row >= 6 && row <= 8 && col >= 6 && col <= 8) {
                         cell.classList.add('center');
                         // Create colored center
-                        if (row === 6 && col === 7) cell.style.background = '#4ecdc4'; // blue
+                        if (row === 6 && col === 7) cell.style.background = '#5cc8d8'; // blue
                         if (row === 7 && col === 6) cell.style.background = '#f7d44c'; // yellow
-                        if (row === 7 && col === 8) cell.style.background = '#6bcb77'; // green
-                        if (row === 8 && col === 7) cell.style.background = '#eb5757'; // red
+                        if (row === 7 && col === 8) cell.style.background = '#78c880'; // green
+                        if (row === 8 && col === 7) cell.style.background = '#e87878'; // red
                         if (row === 7 && col === 7) cell.style.background = 'white';
                     }
 
-                    // Home paths
-                    if (row === 7 && col >= 1 && col <= 5) cell.classList.add('home-red');
-                    if (row === 7 && col >= 9 && col <= 13) cell.classList.add('home-green');
-                    if (col === 7 && row >= 1 && row <= 5) cell.classList.add('home-blue');
-                    if (col === 7 && row >= 9 && row <= 13) cell.classList.add('home-yellow');
+                    // Home paths (colored columns leading to center)
+                    if (row === 7 && col >= 1 && col <= 5) cell.classList.add('home-yellow');  // Yellow: left horizontal
+                    if (row === 7 && col >= 9 && col <= 13) cell.classList.add('home-green');  // Green: right horizontal
+                    if (col === 7 && row >= 1 && row <= 5) cell.classList.add('home-blue');    // Blue: top vertical
+                    if (col === 7 && row >= 9 && row <= 13) cell.classList.add('home-red');    // Red: bottom vertical
 
-                    // Start spots
-                    if (row === 6 && col === 1) cell.classList.add('start-red', 'safe-spot');
+                    // Start spots (where tokens exit from base) - only these have stars
+                    if (row === 6 && col === 1) cell.classList.add('start-yellow', 'safe-spot');
                     if (row === 1 && col === 8) cell.classList.add('start-blue', 'safe-spot');
                     if (row === 8 && col === 13) cell.classList.add('start-green', 'safe-spot');
-                    if (row === 13 && col === 6) cell.classList.add('start-yellow', 'safe-spot');
-
-                    // Other safe spots
-                    if ((row === 2 && col === 6) || (row === 6 && col === 12) ||
-                        (row === 12 && col === 8) || (row === 8 && col === 2)) {
-                        cell.classList.add('safe-spot');
-                    }
+                    if (row === 13 && col === 6) cell.classList.add('start-red', 'safe-spot');
 
                     board.appendChild(cell);
                 }
@@ -963,7 +1189,7 @@
             // Clear existing tokens
             document.querySelectorAll('.token').forEach(t => t.remove());
 
-            // Group tokens by position
+            // Group tokens by position AND color
             const positionMap = new Map();
 
             for (const player of players) {
@@ -971,7 +1197,8 @@
                     if (token.finished) continue;
 
                     const coords = token.getCoords();
-                    const key = `${coords[0]}-${coords[1]}`;
+                    // Key includes color to group same-color tokens separately
+                    const key = `${coords[0]}-${coords[1]}-${token.color}`;
 
                     if (!positionMap.has(key)) {
                         positionMap.set(key, []);
@@ -980,9 +1207,20 @@
                 }
             }
 
+            // Count how many different colors are on each cell for positioning
+            const cellColorCount = new Map();
+            for (const key of positionMap.keys()) {
+                const [row, col] = key.split('-');
+                const cellKey = `${row}-${col}`;
+                cellColorCount.set(cellKey, (cellColorCount.get(cellKey) || 0) + 1);
+            }
+
+            // Track which color index we're on for each cell
+            const cellColorIndex = new Map();
+
             // Render tokens
             for (const [key, tokens] of positionMap) {
-                const [row, col] = key.split('-').map(Number);
+                const [row, col, color] = key.split('-');
                 const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
 
                 if (!cell) continue;
@@ -990,11 +1228,39 @@
                 // Get container (token-holder if exists, otherwise cell)
                 let container = cell.querySelector('.token-holder') || cell;
 
+                // Calculate offset if multiple colors on same cell
+                const cellKey = `${row}-${col}`;
+                const totalColors = cellColorCount.get(cellKey) || 1;
+                const colorIdx = cellColorIndex.get(cellKey) || 0;
+                cellColorIndex.set(cellKey, colorIdx + 1);
+
                 // Create token element
                 const tokenEl = document.createElement('div');
                 tokenEl.className = `token token-${tokens[0].color}`;
                 tokenEl.dataset.color = tokens[0].color;
                 tokenEl.dataset.index = tokens[0].index;
+
+                // Offset tokens if multiple colors on same cell
+                if (totalColors > 1) {
+                    const offsetX = colorIdx === 0 ? -25 : 25;
+                    const offsetY = colorIdx === 0 ? -15 : 15;
+                    tokenEl.style.transform = `translate(${offsetX}%, ${offsetY}%) scale(0.7)`;
+                    tokenEl.style.zIndex = 10 + colorIdx;
+                }
+
+                // Add 3D base
+                const baseEl = document.createElement('div');
+                baseEl.className = 'token-base';
+                tokenEl.appendChild(baseEl);
+
+                // Add eyes
+                const leftEye = document.createElement('div');
+                leftEye.className = 'token-eye left';
+                tokenEl.appendChild(leftEye);
+
+                const rightEye = document.createElement('div');
+                rightEye.className = 'token-eye right';
+                tokenEl.appendChild(rightEye);
 
                 // If multiple tokens of same color
                 if (tokens.length > 1) {
@@ -1032,7 +1298,16 @@
         }
 
         function handleTokenClick(token) {
-            if (!diceRolled || diceValue === 0) return;
+            console.log('[TOKEN] Клик на фишку:', token.color, token.index, '| diceRolled:', diceRolled, '| diceValue:', diceValue, '| isAnimating:', isAnimating);
+
+            if (!diceRolled || diceValue === 0) {
+                console.log('[TOKEN] Заблокировано: кубик не брошен');
+                return;
+            }
+            if (isAnimating) {
+                console.log('[TOKEN] Заблокировано: анимация');
+                return;
+            }
 
             // Clear any auto-skip timers
             if (skipTimer) clearTimeout(skipTimer);
@@ -1040,111 +1315,291 @@
             document.getElementById('countdown').textContent = '';
 
             const player = players[currentPlayer];
-            if (token.color !== player.color) return;
-            if (!token.canMove(diceValue)) return;
+            if (token.color !== player.color) {
+                console.log('[TOKEN] Заблокировано: не ваша фишка');
+                return;
+            }
+            if (!token.canMove(diceValue)) {
+                console.log('[TOKEN] Заблокировано: фишка не может двигаться');
+                return;
+            }
 
-            // Check for capture before moving
-            const oldCoords = token.getCoords();
-            token.move(diceValue);
-            const newCoords = token.getCoords();
+            // Start animated movement
+            console.log('[TOKEN] Начинаем движение фишки на', diceValue, 'шагов');
+            isAnimating = true;
+            const steps = diceValue;
+            const wasInBase = token.inBase;
 
-            // Check for capture (if on main path)
-            if (!token.inBase && token.position < MAIN_PATH_LENGTH && !token.finished) {
-                const absPos = token.getAbsolutePosition();
-                const isSafe = SAFE_SPOTS.includes(absPos);
+            animateTokenMove(token, steps, wasInBase, () => {
+                // Animation complete - check for capture
+                let captured = false;
 
-                if (!isSafe) {
-                    for (const otherPlayer of players) {
-                        if (otherPlayer.color === player.color) continue;
+                if (!token.inBase && token.position < MAIN_PATH_LENGTH && !token.finished) {
+                    const absPos = token.getAbsolutePosition();
+                    const isSafe = SAFE_SPOTS.includes(absPos);
 
-                        for (const otherToken of otherPlayer.tokens) {
-                            if (otherToken.inBase || otherToken.finished) continue;
-                            if (otherToken.position >= MAIN_PATH_LENGTH) continue;
+                    if (!isSafe) {
+                        for (const otherPlayer of players) {
+                            if (otherPlayer.color === player.color) continue;
 
-                            const otherAbsPos = otherToken.getAbsolutePosition();
-                            if (otherAbsPos === absPos) {
-                                // Capture!
-                                otherToken.inBase = true;
-                                otherToken.position = -1;
-                                setMessage(`${PLAYER_NAMES[player.color]} съел фишку ${PLAYER_NAMES[otherPlayer.color]}!`);
+                            for (const otherToken of otherPlayer.tokens) {
+                                if (otherToken.inBase || otherToken.finished) continue;
+                                if (otherToken.position >= MAIN_PATH_LENGTH) continue;
+
+                                const otherAbsPos = otherToken.getAbsolutePosition();
+                                if (otherAbsPos === absPos) {
+                                    // Capture!
+                                    otherToken.inBase = true;
+                                    otherToken.position = -1;
+                                    captured = true;
+                                    console.log('[GAME] Захват! Фишка', otherPlayer.color, 'отправлена на базу');
+                                    setMessage(`${PLAYER_NAMES[player.color]} съел фишку ${PLAYER_NAMES[otherPlayer.color]}! Бросайте ещё раз`);
+                                }
                             }
                         }
                     }
                 }
+
+                // Check for win
+                if (player.hasWon()) {
+                    isAnimating = false;
+                    showWinner(player);
+                    return;
+                }
+
+                // Next turn logic
+                diceRolled = false;
+
+                // Bonus roll for capture (but not if it was a 6, that already gives bonus)
+                if (captured && diceValue !== 6) {
+                    canRollAgain = true;
+                    consecutiveSixes = 0; // Reset sixes counter on capture
+                    console.log('[GAME] Захват! Бонусный бросок');
+                    // Message already set above
+                } else if (diceValue === 6) {
+                    consecutiveSixes++;
+                    if (consecutiveSixes >= 3) {
+                        // Three sixes in a row - lose turn
+                        console.log('[GAME] Три шестёрки подряд! Ход потерян');
+                        setMessage('Три шестёрки подряд! Ход потерян');
+                        canRollAgain = false;
+                        consecutiveSixes = 0;
+                        isAnimating = false; // Важно! Снимаем блокировку
+                        setTimeout(() => {
+                            nextPlayer();
+                            diceValue = 0;
+                            renderTokens();
+                            updateUI();
+                        }, 1500);
+                        return;
+                    } else {
+                        canRollAgain = true;
+                        console.log('[GAME] Шестёрка! consecutiveSixes:', consecutiveSixes, '| canRollAgain:', true);
+                        if (captured) {
+                            setMessage(`Съели фишку и выбросили 6! (${consecutiveSixes}/3) Бросайте ещё раз`);
+                        } else {
+                            setMessage(`Вы выбросили 6! (${consecutiveSixes}/3) Бросайте ещё раз`);
+                        }
+                    }
+                } else {
+                    canRollAgain = false;
+                    consecutiveSixes = 0;
+                    console.log('[GAME] Обычный ход. Передаём ход следующему игроку');
+                    nextPlayer();
+                }
+
+                diceValue = 0;
+                isAnimating = false;
+                console.log('[GAME] Ход завершён. isAnimating:', false, '| canRollAgain:', canRollAgain);
+                renderTokens();
+                updateUI();
+            });
+        }
+
+        // Build the path of positions for animation
+        function buildPath(token, totalSteps, wasInBase) {
+            const path = [];
+            const color = token.color;
+            const startPos = START_POSITIONS[color];
+            const homeEntry = HOME_ENTRY[color];
+            const homeEntryFromStart = (homeEntry - startPos + MAIN_PATH_LENGTH) % MAIN_PATH_LENGTH;
+
+            // Starting point
+            if (wasInBase) {
+                path.push(BASE_POSITIONS[color][token.index]);
+                // Exit to start position (position 0 for this color)
+                path.push(getCoordsForPos(color, 0));
+                return path;
             }
 
-            // Check for win
-            if (player.hasWon()) {
-                showWinner(player);
-                return;
+            // Start from current position
+            path.push(token.getCoords());
+
+            let pos = token.position;
+            let inHome = pos >= MAIN_PATH_LENGTH;
+
+            for (let i = 0; i < totalSteps; i++) {
+                if (inHome) {
+                    // Already in home path - just move forward
+                    pos++;
+                } else {
+                    // On main path
+                    // Check if next step enters home
+                    if (pos === homeEntryFromStart) {
+                        // Enter home path
+                        pos = MAIN_PATH_LENGTH;
+                        inHome = true;
+                    } else {
+                        pos++;
+                        // Handle wrap-around on main path
+                        if (pos >= MAIN_PATH_LENGTH) {
+                            pos = 0;
+                        }
+                    }
+                }
+                path.push(getCoordsForPos(color, pos));
             }
 
-            // Next turn logic
-            diceRolled = false;
+            return path;
+        }
 
-            if (diceValue === 6) {
-                canRollAgain = true;
-                setMessage('Вы выбросили 6! Бросайте ещё раз');
+        function getCoordsForPos(color, position) {
+            if (position < MAIN_PATH_LENGTH) {
+                const startPos = START_POSITIONS[color];
+                const absPos = (startPos + position) % MAIN_PATH_LENGTH;
+                return MAIN_PATH_COORDS[absPos];
             } else {
-                canRollAgain = false;
-                nextPlayer();
+                const homePos = position - MAIN_PATH_LENGTH;
+                if (homePos >= 0 && homePos < 6) {
+                    return HOME_PATHS[color][homePos];
+                }
+                return HOME_PATHS[color][5];
+            }
+        }
+
+        // Animate token movement step by step
+        function animateTokenMove(token, totalSteps, wasInBase, onComplete) {
+            const board = document.getElementById('board');
+
+            // Build the path before modifying token
+            const path = buildPath(token, totalSteps, wasInBase);
+
+            // Now update token state using original move logic
+            token.move(totalSteps);
+
+            // Get cell dimensions from first cell
+            const firstCell = document.querySelector('.cell[data-row="0"][data-col="0"]');
+            const cellRect = firstCell.getBoundingClientRect();
+            const cellWidth = cellRect.width;
+            const cellHeight = cellRect.height;
+
+            // Get starting cell position
+            const startCoords = path[0];
+            const startCell = document.querySelector(`.cell[data-row="${startCoords[0]}"][data-col="${startCoords[1]}"]`);
+            const startCellRect = startCell.getBoundingClientRect();
+
+            // Create animated token element
+            const animToken = document.createElement('div');
+            animToken.className = `token token-${token.color}`;
+            animToken.style.position = 'fixed';
+            animToken.style.width = (cellWidth * 0.7) + 'px';
+            animToken.style.height = (cellHeight * 0.7) + 'px';
+            animToken.style.left = (startCellRect.left + cellWidth * 0.15) + 'px';
+            animToken.style.top = (startCellRect.top + cellHeight * 0.15) + 'px';
+            animToken.style.zIndex = '1000';
+            animToken.style.transition = 'left 0.15s ease-out, top 0.15s ease-out';
+            animToken.style.pointerEvents = 'none';
+
+            // Add base for 3D effect
+            const baseEl = document.createElement('div');
+            baseEl.className = 'token-base';
+            animToken.appendChild(baseEl);
+
+            // Add eyes
+            const leftEye = document.createElement('div');
+            leftEye.className = 'token-eye left';
+            animToken.appendChild(leftEye);
+            const rightEye = document.createElement('div');
+            rightEye.className = 'token-eye right';
+            animToken.appendChild(rightEye);
+
+            document.body.appendChild(animToken);
+
+            // Hide original token during animation
+            const origToken = startCell.querySelector(`.token-${token.color}`);
+            if (origToken) origToken.style.visibility = 'hidden';
+
+            let currentStep = 0;
+
+            function moveToNextStep() {
+                currentStep++;
+
+                if (currentStep >= path.length) {
+                    // Animation complete
+                    animToken.remove();
+                    onComplete();
+                    return;
+                }
+
+                const coords = path[currentStep];
+                const targetCell = document.querySelector(`.cell[data-row="${coords[0]}"][data-col="${coords[1]}"]`);
+
+                if (targetCell) {
+                    const targetRect = targetCell.getBoundingClientRect();
+                    animToken.style.left = (targetRect.left + cellWidth * 0.15) + 'px';
+                    animToken.style.top = (targetRect.top + cellHeight * 0.15) + 'px';
+                }
+
+                setTimeout(moveToNextStep, 180);
             }
 
-            diceValue = 0;
-            renderTokens();
-            updateUI();
+            // Start animation after a small delay
+            setTimeout(moveToNextStep, 50);
         }
 
         function rollDice() {
-            if (diceRolled && !canRollAgain) return;
+            console.log('[DICE] rollDice вызван. diceRolled:', diceRolled, 'canRollAgain:', canRollAgain, 'isAnimating:', isAnimating);
 
-            const dice = document.getElementById('dice');
-            dice.classList.add('rolling');
+            if (diceRolled && !canRollAgain) {
+                console.log('[DICE] Заблокировано: уже бросали и нельзя бросать снова');
+                return;
+            }
+            if (isAnimating) {
+                console.log('[DICE] Заблокировано: анимация в процессе');
+                return;
+            }
+
+            const diceDisplay = document.getElementById('dice-display');
+
+            diceDisplay.classList.add('rolling');
+            diceDisplay.textContent = '?';
 
             setTimeout(() => {
                 diceValue = Math.floor(Math.random() * 6) + 1;
-                dice.classList.remove('rolling');
-                showDiceValue(diceValue);
+                console.log('[DICE] Выпало:', diceValue, '| Игрок:', players[currentPlayer]?.color, '| consecutiveSixes:', consecutiveSixes);
+
+                diceDisplay.classList.remove('rolling');
+                diceDisplay.textContent = diceValue;
                 diceRolled = true;
                 canRollAgain = false;
 
                 const player = players[currentPlayer];
                 if (!player.hasMovableToken(diceValue)) {
+                    console.log('[DICE] Нет доступных ходов, автопропуск');
                     startAutoSkip();
                 } else {
+                    console.log('[DICE] Есть доступные ходы');
                     setMessage('Выберите фишку для хода');
                 }
 
                 highlightMovableTokens();
                 updateUI();
-            }, 500);
-        }
-
-        function showDiceValue(value) {
-            const dice = document.getElementById('dice');
-            dice.innerHTML = '';
-
-            // Create dots based on value
-            const dotPositions = {
-                1: [[50, 50]],
-                2: [[25, 25], [75, 75]],
-                3: [[25, 25], [50, 50], [75, 75]],
-                4: [[25, 25], [75, 25], [25, 75], [75, 75]],
-                5: [[25, 25], [75, 25], [50, 50], [25, 75], [75, 75]],
-                6: [[25, 25], [75, 25], [25, 50], [75, 50], [25, 75], [75, 75]]
-            };
-
-            for (const [x, y] of dotPositions[value]) {
-                const dot = document.createElement('div');
-                dot.className = 'dice-dot';
-                dot.style.left = `${x - 8}%`;
-                dot.style.top = `${y - 8}%`;
-                dice.appendChild(dot);
-            }
+            }, 800);
         }
 
         function applyManualDice() {
             if (diceRolled && !canRollAgain) return;
+            if (isAnimating) return;
 
             const input = document.getElementById('manual-dice-input');
             const value = parseInt(input.value);
@@ -1155,7 +1610,7 @@
             }
 
             diceValue = value;
-            showDiceValue(diceValue);
+            document.getElementById('dice-display').textContent = diceValue;
             diceRolled = true;
             canRollAgain = false;
             input.value = '';
@@ -1208,10 +1663,14 @@
 
         function updateDelay() {
             skipDelay = parseInt(document.getElementById('delay-select').value);
+            saveGame();
         }
 
         function nextPlayer() {
+            const prevPlayer = players[currentPlayer]?.color;
             currentPlayer = (currentPlayer + 1) % players.length;
+            consecutiveSixes = 0; // сброс счётчика шестёрок
+            console.log('[GAME] nextPlayer:', prevPlayer, '->', players[currentPlayer]?.color);
             setMessage('Бросьте кубик');
         }
 
@@ -1224,6 +1683,15 @@
             toggle.classList.toggle('active', manualMode);
             manualContainer.style.display = manualMode ? 'flex' : 'none';
             rollBtn.style.display = manualMode ? 'none' : 'block';
+            saveGame();
+        }
+
+        function openSettings() {
+            document.getElementById('settings-modal').classList.add('open');
+        }
+
+        function closeSettings() {
+            document.getElementById('settings-modal').classList.remove('open');
         }
 
         function updateUI() {
@@ -1234,16 +1702,23 @@
             indicator.style.background = getColorHex(player.color);
             nameEl.textContent = PLAYER_NAMES[player.color];
 
+            // Update background theme based on current player
+            document.body.classList.remove('theme-red', 'theme-blue', 'theme-green', 'theme-yellow');
+            document.body.classList.add(`theme-${player.color}`);
+
             const rollBtn = document.getElementById('roll-btn');
             rollBtn.disabled = diceRolled && !canRollAgain;
+
+            // Auto-save game state
+            saveGame();
         }
 
         function getColorHex(color) {
             const colors = {
                 'yellow': '#f7d44c',
-                'blue': '#4ecdc4',
-                'red': '#eb5757',
-                'green': '#6bcb77'
+                'blue': '#5cc8d8',
+                'red': '#e87878',
+                'green': '#78c880'
             };
             return colors[color];
         }
@@ -1260,8 +1735,112 @@
             modal.style.display = 'flex';
         }
 
-        // Start with setup screen
-        showSetup();
+        // Save game state to localStorage
+        function saveGame() {
+            // Don't save if no game in progress
+            if (!players || players.length === 0) return;
+
+            const gameState = {
+                playerCount: playerCount,
+                currentPlayer: currentPlayer,
+                diceValue: diceValue,
+                diceRolled: diceRolled,
+                canRollAgain: canRollAgain,
+                consecutiveSixes: consecutiveSixes,
+                skipDelay: skipDelay,
+                manualMode: manualMode,
+                players: players.map(p => ({
+                    color: p.color,
+                    tokens: p.tokens.map(t => ({
+                        color: t.color,
+                        index: t.index,
+                        inBase: t.inBase,
+                        position: t.position,
+                        finished: t.finished
+                    }))
+                }))
+            };
+            localStorage.setItem('ludoGame', JSON.stringify(gameState));
+        }
+
+        // Load game state from localStorage
+        function loadGame() {
+            const saved = localStorage.getItem('ludoGame');
+            if (!saved) return false;
+
+            try {
+                const state = JSON.parse(saved);
+
+                playerCount = state.playerCount;
+                currentPlayer = state.currentPlayer;
+                diceValue = state.diceValue || 0;
+                diceRolled = state.diceRolled || false;
+                canRollAgain = state.canRollAgain || false;
+                consecutiveSixes = state.consecutiveSixes || 0;
+                skipDelay = state.skipDelay || 1;
+                manualMode = state.manualMode || false;
+
+                // Restore players
+                players = [];
+                for (const pData of state.players) {
+                    const player = new Player(pData.color);
+                    for (let i = 0; i < pData.tokens.length; i++) {
+                        player.tokens[i].inBase = pData.tokens[i].inBase;
+                        player.tokens[i].position = pData.tokens[i].position;
+                        player.tokens[i].finished = pData.tokens[i].finished;
+                    }
+                    players.push(player);
+                }
+
+                // Restore UI settings
+                document.getElementById('delay-select').value = skipDelay;
+                if (manualMode) {
+                    document.getElementById('manual-toggle').classList.add('active');
+                    document.getElementById('manual-dice-container').style.display = 'flex';
+                    document.getElementById('roll-btn').style.display = 'none';
+                }
+
+                return true;
+            } catch (e) {
+                console.error('Error loading game:', e);
+                return false;
+            }
+        }
+
+        // Clear saved game
+        function clearSavedGame() {
+            localStorage.removeItem('ludoGame');
+        }
+
+        // Initialize: try to load saved game or show setup
+        function init() {
+            if (loadGame()) {
+                // Resume saved game
+                document.getElementById('setup-screen').style.display = 'none';
+                document.getElementById('game-container').style.display = 'flex';
+                document.getElementById('winner-modal').style.display = 'none';
+
+                createBoard();
+                updateUI();
+
+                if (diceRolled && diceValue > 0) {
+                    document.getElementById('dice-display').textContent = diceValue;
+                    highlightMovableTokens();
+                }
+            } else {
+                showSetup();
+            }
+        }
+
+        // Modify showSetup to clear saved game when starting new
+        const originalShowSetup = showSetup;
+        showSetup = function () {
+            clearSavedGame();
+            originalShowSetup();
+        };
+
+        // Start
+        init();
     </script>
 </body>
 
