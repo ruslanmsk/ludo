@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лудо - Настольная игра</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e8a87c 0%, #d4896a 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 {
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+        }
+
+        /* Setup Screen */
+        #setup-screen {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            max-width: 400px;
+        }
+
+        #setup-screen h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .player-count-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border-radius: 10px;
+            margin: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .player-count-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Game Container */
+        #game-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Info Panel */
+        #info-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 15px 25px;
+            margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .current-player {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .player-indicator {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 3px solid #333;
+        }
+
+        #message {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        /* Board */
+        #board {
+            display: grid;
+            grid-template-columns: repeat(15, 1fr);
+            grid-template-rows: repeat(15, 1fr);
+            width: min(90vw, 600px);
+            height: min(90vw, 600px);
+            background: #1a1a2e;
+            border-radius: 10px;
+            padding: 5px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            position: relative;
+            background: white;
+        }
+
+        /* Base areas */
+        .base-yellow {
+            background: #f7d44c;
+            border: none;
+        }
+
+        .base-blue {
+            background: #4ecdc4;
+            border: none;
+        }
+
+        .base-red {
+            background: #eb5757;
+            border: none;
+        }
+
+        .base-green {
+            background: #6bcb77;
+            border: none;
+        }
+
+        /* Home paths */
+        .home-yellow {
+            background: #f7d44c;
+        }
+
+        .home-blue {
+            background: #4ecdc4;
+        }
+
+        .home-red {
+            background: #eb5757;
+        }
+
+        .home-green {
+            background: #6bcb77;
+        }
+
+        /* Center/Home */
+        .center {
+            background: transparent;
+            border: none;
+        }
+
+        /* Safe spots */
+        .safe-spot::after {
+            content: '★';
+            position: absolute;
+            font-size: 0.6rem;
+            color: rgba(0, 0, 0, 0.3);
+        }
+
+        /* Start spots */
+        .start-yellow {
+            background: #f7d44c;
+        }
+
+        .start-blue {
+            background: #4ecdc4;
+        }
+
+        .start-red {
+            background: #eb5757;
+        }
+
+        .start-green {
+            background: #6bcb77;
+        }
+
+        /* Token holder in base */
+        .token-holder {
+            width: 70%;
+            height: 70%;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Tokens */
+        .token {
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            z-index: 10;
+        }
+
+        .token:hover {
+            transform: scale(1.1);
+        }
+
+        .token.movable {
+            animation: pulse 1s infinite;
+            box-shadow: 0 0 10px 3px rgba(255, 255, 255, 0.8);
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.15);
+            }
+        }
+
+        .token-yellow {
+            background: radial-gradient(circle at 30% 30%, #fff7a0, #f7d44c, #c9a227);
+            border: 2px solid #a08020;
+        }
+
+        .token-blue {
+            background: radial-gradient(circle at 30% 30%, #a0f7f0, #4ecdc4, #2a9d8f);
+            border: 2px solid #1a6b63;
+        }
+
+        .token-red {
+            background: radial-gradient(circle at 30% 30%, #ffa0a0, #eb5757, #c53030);
+            border: 2px solid #8b2020;
+        }
+
+        .token-green {
+            background: radial-gradient(circle at 30% 30%, #a0ffa0, #6bcb77, #4a9c54);
+            border: 2px solid #2a6b34;
+        }
+
+        /* Multiple tokens indicator */
+        .token-count {
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            background: #333;
+            color: white;
+            font-size: 0.6rem;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        /* Controls */
+        #controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #dice-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        #dice {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border: 3px solid #333;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            position: relative;
+        }
+
+        #dice.rolling {
+            animation: shake 0.3s infinite;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: rotate(0deg);
+            }
+
+            25% {
+                transform: rotate(-15deg);
+            }
+
+            75% {
+                transform: rotate(15deg);
+            }
+        }
+
+        .dice-dot {
+            width: 10px;
+            height: 10px;
+            background: #333;
+            border-radius: 50%;
+            position: absolute;
+        }
+
+        #roll-btn {
+            background: linear-gradient(135deg, #c0392b 0%, #8e2218 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: bold;
+        }
+
+        #roll-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(192, 57, 43, 0.4);
+        }
+
+        #roll-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Manual dice input */
+        #manual-dice-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        #manual-dice-input {
+            width: 50px;
+            height: 40px;
+            font-size: 1.2rem;
+            text-align: center;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+        }
+
+        #manual-dice-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            font-size: 0.9rem;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .toggle-label {
+            font-size: 0.9rem;
+            color: #333;
+        }
+
+        .toggle {
+            width: 50px;
+            height: 26px;
+            background: #ddd;
+            border-radius: 13px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle.active {
+            background: #667eea;
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: left 0.3s;
+        }
+
+        .toggle.active::after {
+            left: 26px;
+        }
+
+        /* Delay selector */
+        .delay-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .delay-container label {
+            font-size: 0.9rem;
+            color: #333;
+        }
+
+        #delay-select {
+            padding: 5px 10px;
+            font-size: 0.9rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        /* Countdown display */
+        #countdown {
+            font-weight: bold;
+            color: #c0392b;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        /* New Game button */
+        #new-game-btn {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        /* Winner modal */
+        #winner-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .winner-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            animation: popIn 0.5s ease;
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0);
+            }
+
+            70% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .winner-content h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .winner-content button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            #board {
+                width: 95vw;
+                height: 95vw;
+            }
+
+            #controls {
+                flex-direction: column;
+            }
+        }
+
+        /* Center triangles */
+        .center-triangle {
+            position: absolute;
+            width: 0;
+            height: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Лудо</h1>
+
+    <!-- Setup Screen -->
+    <div id="setup-screen">
+        <h2>Выберите количество игроков</h2>
+        <p style="color: #666; margin-bottom: 20px;">2 игрока: Красный vs Синий<br>3 игрока: Красный, Синий,
+            Зелёный<br>4 игрока: Все цвета</p>
+        <button class="player-count-btn" onclick="startGame(2)">2 игрока</button>
+        <button class="player-count-btn" onclick="startGame(3)">3 игрока</button>
+        <button class="player-count-btn" onclick="startGame(4)">4 игрока</button>
+    </div>
+
+    <!-- Game Container -->
+    <div id="game-container">
+        <div id="info-panel">
+            <div class="current-player">
+                <span>Ход:</span>
+                <div class="player-indicator" id="player-indicator"></div>
+                <span id="player-name"></span>
+            </div>
+            <div id="message">Бросьте кубик</div>
+        </div>
+
+        <div id="board"></div>
+
+        <div id="controls">
+            <div id="dice-container">
+                <div id="dice">?</div>
+            </div>
+            <button id="roll-btn" onclick="rollDice()">БРОСОК</button>
+
+            <div class="toggle-container">
+                <span class="toggle-label">Ручной ввод</span>
+                <div class="toggle" id="manual-toggle" onclick="toggleManualMode()"></div>
+            </div>
+
+            <div id="manual-dice-container" style="display: none;">
+                <input type="number" id="manual-dice-input" min="1" max="6" placeholder="1-6">
+                <button id="manual-dice-btn" onclick="applyManualDice()">Применить</button>
+            </div>
+
+            <div class="delay-container">
+                <label>Задержка:</label>
+                <select id="delay-select" onchange="updateDelay()">
+                    <option value="1">1 сек</option>
+                    <option value="2">2 сек</option>
+                    <option value="3" selected>3 сек</option>
+                    <option value="4">4 сек</option>
+                    <option value="5">5 сек</option>
+                </select>
+                <span id="countdown"></span>
+            </div>
+
+            <button id="new-game-btn" onclick="showSetup()">Новая игра</button>
+        </div>
+    </div>
+
+    <!-- Winner Modal -->
+    <div id="winner-modal">
+        <div class="winner-content">
+            <h2 id="winner-text">Победитель!</h2>
+            <button onclick="showSetup()">Играть снова</button>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let playerCount = 4;
+        let currentPlayer = 0;
+        let diceValue = 0;
+        let diceRolled = false;
+        let manualMode = false;
+        let players = [];
+        let canRollAgain = false;
+        let skipDelay = 3; // секунды задержки перед автопропуском
+        let skipTimer = null;
+        let countdownInterval = null;
+
+        // Player configurations
+        const PLAYER_COLORS = ['red', 'blue', 'green', 'yellow'];
+        const PLAYER_NAMES = {
+            'red': 'Красный',
+            'blue': 'Синий',
+            'green': 'Зелёный',
+            'yellow': 'Жёлтый'
+        };
+
+        // Board path positions (clockwise from red start)
+        // Main path: 52 cells, each player starts at different position
+        const MAIN_PATH_LENGTH = 52;
+
+        // Starting positions on main path for each color
+        const START_POSITIONS = {
+            'red': 0,
+            'blue': 13,
+            'green': 26,
+            'yellow': 39
+        };
+
+        // Home entry positions (before entering home column)
+        const HOME_ENTRY = {
+            'red': 50,
+            'blue': 11,
+            'green': 24,
+            'yellow': 37
+        };
+
+        // Safe spots on main path
+        const SAFE_SPOTS = [0, 8, 13, 21, 26, 34, 39, 47];
+
+        // Board cell coordinates (row, col) for main path
+        const MAIN_PATH_COORDS = [
+            // Red start area exit and path (0-12)
+            [6, 1], [6, 2], [6, 3], [6, 4], [6, 5], // 0-4
+            [5, 6], [4, 6], [3, 6], [2, 6], [1, 6], [0, 6], // 5-10
+            [0, 7], [0, 8], // 11-12
+
+            // Blue start area exit and path (13-25)
+            [1, 8], [2, 8], [3, 8], [4, 8], [5, 8], // 13-17
+            [6, 9], [6, 10], [6, 11], [6, 12], [6, 13], [6, 14], // 18-23
+            [7, 14], [8, 14], // 24-25
+
+            // Green start area exit and path (26-38)
+            [8, 13], [8, 12], [8, 11], [8, 10], [8, 9], // 26-30
+            [9, 8], [10, 8], [11, 8], [12, 8], [13, 8], [14, 8], // 31-36
+            [14, 7], [14, 6], // 37-38
+
+            // Yellow start area exit and path (39-51)
+            [13, 6], [12, 6], [11, 6], [10, 6], [9, 6], // 39-43
+            [8, 5], [8, 4], [8, 3], [8, 2], [8, 1], [8, 0], // 44-49
+            [7, 0], [6, 0] // 50-51
+        ];
+
+        // Home path coordinates for each color (6 cells each, last is center)
+        const HOME_PATHS = {
+            'red': [[7, 1], [7, 2], [7, 3], [7, 4], [7, 5], [7, 6]],
+            'blue': [[1, 7], [2, 7], [3, 7], [4, 7], [5, 7], [6, 7]],
+            'green': [[7, 13], [7, 12], [7, 11], [7, 10], [7, 9], [7, 8]],
+            'yellow': [[13, 7], [12, 7], [11, 7], [10, 7], [9, 7], [8, 7]]
+        };
+
+        // Base positions for each color's 4 tokens
+        const BASE_POSITIONS = {
+            'yellow': [[1, 1], [1, 4], [4, 1], [4, 4]],
+            'blue': [[1, 10], [1, 13], [4, 10], [4, 13]],
+            'red': [[10, 1], [10, 4], [13, 1], [13, 4]],
+            'green': [[10, 10], [10, 13], [13, 10], [13, 13]]
+        };
+
+        // Token class
+        class Token {
+            constructor(color, index) {
+                this.color = color;
+                this.index = index;
+                this.inBase = true;
+                this.position = -1; // -1 = in base, 0-51 = main path, 52-57 = home path
+                this.finished = false;
+            }
+
+            getAbsolutePosition() {
+                if (this.inBase) return -1;
+                if (this.finished) return 100;
+
+                const startPos = START_POSITIONS[this.color];
+                return (startPos + this.position) % MAIN_PATH_LENGTH;
+            }
+
+            canMove(steps) {
+                if (this.finished) return false;
+
+                if (this.inBase) {
+                    return steps === 6;
+                }
+
+                const startPos = START_POSITIONS[this.color];
+                const homeEntry = HOME_ENTRY[this.color];
+
+                // Calculate current absolute position
+                let currentAbsPos = (startPos + this.position) % MAIN_PATH_LENGTH;
+
+                // Check if entering or in home path
+                let stepsToHome = 0;
+                if (this.position < MAIN_PATH_LENGTH) {
+                    // Calculate steps to reach home entry
+                    let posFromStart = this.position;
+                    let homeEntryFromStart = (homeEntry - startPos + MAIN_PATH_LENGTH) % MAIN_PATH_LENGTH;
+
+                    if (posFromStart <= homeEntryFromStart) {
+                        stepsToHome = homeEntryFromStart - posFromStart;
+                    } else {
+                        // Already passed home entry
+                        stepsToHome = MAIN_PATH_LENGTH - posFromStart + homeEntryFromStart;
+                    }
+
+                    if (steps > stepsToHome) {
+                        // Will enter home path
+                        let homeSteps = steps - stepsToHome - 1;
+                        return homeSteps <= 5; // 6 home cells (0-5)
+                    }
+                } else {
+                    // Already in home path
+                    let homePos = this.position - MAIN_PATH_LENGTH;
+                    let newHomePos = homePos + steps;
+                    return newHomePos <= 5; // Exact or under
+                }
+
+                return true;
+            }
+
+            move(steps) {
+                if (this.inBase) {
+                    this.inBase = false;
+                    this.position = 0;
+                    return;
+                }
+
+                const startPos = START_POSITIONS[this.color];
+                const homeEntry = HOME_ENTRY[this.color];
+
+                if (this.position < MAIN_PATH_LENGTH) {
+                    let homeEntryFromStart = (homeEntry - startPos + MAIN_PATH_LENGTH) % MAIN_PATH_LENGTH;
+                    let stepsToHome = homeEntryFromStart - this.position;
+
+                    if (stepsToHome < 0) {
+                        stepsToHome += MAIN_PATH_LENGTH;
+                    }
+
+                    if (this.position <= homeEntryFromStart && this.position + steps > homeEntryFromStart) {
+                        // Enter home path
+                        let homeSteps = steps - stepsToHome - 1;
+                        this.position = MAIN_PATH_LENGTH + homeSteps;
+
+                        if (homeSteps === 5) {
+                            this.finished = true;
+                        }
+                    } else {
+                        this.position = (this.position + steps) % MAIN_PATH_LENGTH;
+                    }
+                } else {
+                    // In home path
+                    let homePos = this.position - MAIN_PATH_LENGTH;
+                    homePos += steps;
+                    this.position = MAIN_PATH_LENGTH + homePos;
+
+                    if (homePos === 5) {
+                        this.finished = true;
+                    }
+                }
+            }
+
+            getCoords() {
+                if (this.inBase) {
+                    return BASE_POSITIONS[this.color][this.index];
+                }
+
+                if (this.position < MAIN_PATH_LENGTH) {
+                    const startPos = START_POSITIONS[this.color];
+                    const absPos = (startPos + this.position) % MAIN_PATH_LENGTH;
+                    return MAIN_PATH_COORDS[absPos];
+                } else {
+                    const homePos = this.position - MAIN_PATH_LENGTH;
+                    if (homePos >= 0 && homePos < 6) {
+                        return HOME_PATHS[this.color][homePos];
+                    }
+                    return HOME_PATHS[this.color][5]; // Center
+                }
+            }
+        }
+
+        // Player class
+        class Player {
+            constructor(color) {
+                this.color = color;
+                this.tokens = [];
+                for (let i = 0; i < 4; i++) {
+                    this.tokens.push(new Token(color, i));
+                }
+            }
+
+            hasWon() {
+                return this.tokens.every(t => t.finished);
+            }
+
+            hasMovableToken(diceValue) {
+                return this.tokens.some(t => t.canMove(diceValue));
+            }
+
+            getMovableTokens(diceValue) {
+                return this.tokens.filter(t => t.canMove(diceValue));
+            }
+        }
+
+        // Initialize game
+        function startGame(count) {
+            playerCount = count;
+            players = [];
+
+            // Set up players based on count
+            let activeColors;
+            if (count === 2) {
+                activeColors = ['red', 'blue'];
+            } else if (count === 3) {
+                activeColors = ['red', 'blue', 'green'];
+            } else {
+                activeColors = ['red', 'blue', 'green', 'yellow'];
+            }
+
+            for (const color of activeColors) {
+                players.push(new Player(color));
+            }
+
+            currentPlayer = 0;
+            diceValue = 0;
+            diceRolled = false;
+            canRollAgain = false;
+
+            // Clear any existing timers
+            if (skipTimer) clearTimeout(skipTimer);
+            if (countdownInterval) clearInterval(countdownInterval);
+            document.getElementById('countdown').textContent = '';
+
+            document.getElementById('setup-screen').style.display = 'none';
+            document.getElementById('game-container').style.display = 'flex';
+            document.getElementById('winner-modal').style.display = 'none';
+
+            createBoard();
+            updateUI();
+        }
+
+        function showSetup() {
+            // Clear any existing timers
+            if (skipTimer) clearTimeout(skipTimer);
+            if (countdownInterval) clearInterval(countdownInterval);
+
+            document.getElementById('setup-screen').style.display = 'block';
+            document.getElementById('game-container').style.display = 'none';
+            document.getElementById('winner-modal').style.display = 'none';
+        }
+
+        function createBoard() {
+            const board = document.getElementById('board');
+            board.innerHTML = '';
+
+            for (let row = 0; row < 15; row++) {
+                for (let col = 0; col < 15; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+
+                    // Base areas
+                    if (row < 6 && col < 6) {
+                        cell.classList.add('base-yellow');
+                        // Token holders
+                        if ((row === 1 || row === 4) && (col === 1 || col === 4)) {
+                            cell.innerHTML = '<div class="token-holder"></div>';
+                        }
+                    } else if (row < 6 && col > 8) {
+                        cell.classList.add('base-blue');
+                        if ((row === 1 || row === 4) && (col === 10 || col === 13)) {
+                            cell.innerHTML = '<div class="token-holder"></div>';
+                        }
+                    } else if (row > 8 && col < 6) {
+                        cell.classList.add('base-red');
+                        if ((row === 10 || row === 13) && (col === 1 || col === 4)) {
+                            cell.innerHTML = '<div class="token-holder"></div>';
+                        }
+                    } else if (row > 8 && col > 8) {
+                        cell.classList.add('base-green');
+                        if ((row === 10 || row === 13) && (col === 10 || col === 13)) {
+                            cell.innerHTML = '<div class="token-holder"></div>';
+                        }
+                    }
+
+                    // Center area (triangles will be done with CSS/SVG)
+                    if (row >= 6 && row <= 8 && col >= 6 && col <= 8) {
+                        cell.classList.add('center');
+                        // Create colored center
+                        if (row === 6 && col === 7) cell.style.background = '#4ecdc4'; // blue
+                        if (row === 7 && col === 6) cell.style.background = '#f7d44c'; // yellow
+                        if (row === 7 && col === 8) cell.style.background = '#6bcb77'; // green
+                        if (row === 8 && col === 7) cell.style.background = '#eb5757'; // red
+                        if (row === 7 && col === 7) cell.style.background = 'white';
+                    }
+
+                    // Home paths
+                    if (row === 7 && col >= 1 && col <= 5) cell.classList.add('home-red');
+                    if (row === 7 && col >= 9 && col <= 13) cell.classList.add('home-green');
+                    if (col === 7 && row >= 1 && row <= 5) cell.classList.add('home-blue');
+                    if (col === 7 && row >= 9 && row <= 13) cell.classList.add('home-yellow');
+
+                    // Start spots
+                    if (row === 6 && col === 1) cell.classList.add('start-red', 'safe-spot');
+                    if (row === 1 && col === 8) cell.classList.add('start-blue', 'safe-spot');
+                    if (row === 8 && col === 13) cell.classList.add('start-green', 'safe-spot');
+                    if (row === 13 && col === 6) cell.classList.add('start-yellow', 'safe-spot');
+
+                    // Other safe spots
+                    if ((row === 2 && col === 6) || (row === 6 && col === 12) ||
+                        (row === 12 && col === 8) || (row === 8 && col === 2)) {
+                        cell.classList.add('safe-spot');
+                    }
+
+                    board.appendChild(cell);
+                }
+            }
+
+            renderTokens();
+        }
+
+        function renderTokens() {
+            // Clear existing tokens
+            document.querySelectorAll('.token').forEach(t => t.remove());
+
+            // Group tokens by position
+            const positionMap = new Map();
+
+            for (const player of players) {
+                for (const token of player.tokens) {
+                    if (token.finished) continue;
+
+                    const coords = token.getCoords();
+                    const key = `${coords[0]}-${coords[1]}`;
+
+                    if (!positionMap.has(key)) {
+                        positionMap.set(key, []);
+                    }
+                    positionMap.get(key).push(token);
+                }
+            }
+
+            // Render tokens
+            for (const [key, tokens] of positionMap) {
+                const [row, col] = key.split('-').map(Number);
+                const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+
+                if (!cell) continue;
+
+                // Get container (token-holder if exists, otherwise cell)
+                let container = cell.querySelector('.token-holder') || cell;
+
+                // Create token element
+                const tokenEl = document.createElement('div');
+                tokenEl.className = `token token-${tokens[0].color}`;
+                tokenEl.dataset.color = tokens[0].color;
+                tokenEl.dataset.index = tokens[0].index;
+
+                // If multiple tokens of same color
+                if (tokens.length > 1) {
+                    const countEl = document.createElement('div');
+                    countEl.className = 'token-count';
+                    countEl.textContent = tokens.length;
+                    tokenEl.appendChild(countEl);
+                }
+
+                tokenEl.onclick = () => handleTokenClick(tokens[0]);
+                container.appendChild(tokenEl);
+            }
+
+            highlightMovableTokens();
+        }
+
+        function highlightMovableTokens() {
+            document.querySelectorAll('.token').forEach(t => t.classList.remove('movable'));
+
+            if (!diceRolled || diceValue === 0) return;
+
+            const player = players[currentPlayer];
+            const movableTokens = player.getMovableTokens(diceValue);
+
+            for (const token of movableTokens) {
+                const coords = token.getCoords();
+                const cell = document.querySelector(`.cell[data-row="${coords[0]}"][data-col="${coords[1]}"]`);
+                if (cell) {
+                    const tokenEl = cell.querySelector(`.token-${token.color}`);
+                    if (tokenEl) {
+                        tokenEl.classList.add('movable');
+                    }
+                }
+            }
+        }
+
+        function handleTokenClick(token) {
+            if (!diceRolled || diceValue === 0) return;
+
+            // Clear any auto-skip timers
+            if (skipTimer) clearTimeout(skipTimer);
+            if (countdownInterval) clearInterval(countdownInterval);
+            document.getElementById('countdown').textContent = '';
+
+            const player = players[currentPlayer];
+            if (token.color !== player.color) return;
+            if (!token.canMove(diceValue)) return;
+
+            // Check for capture before moving
+            const oldCoords = token.getCoords();
+            token.move(diceValue);
+            const newCoords = token.getCoords();
+
+            // Check for capture (if on main path)
+            if (!token.inBase && token.position < MAIN_PATH_LENGTH && !token.finished) {
+                const absPos = token.getAbsolutePosition();
+                const isSafe = SAFE_SPOTS.includes(absPos);
+
+                if (!isSafe) {
+                    for (const otherPlayer of players) {
+                        if (otherPlayer.color === player.color) continue;
+
+                        for (const otherToken of otherPlayer.tokens) {
+                            if (otherToken.inBase || otherToken.finished) continue;
+                            if (otherToken.position >= MAIN_PATH_LENGTH) continue;
+
+                            const otherAbsPos = otherToken.getAbsolutePosition();
+                            if (otherAbsPos === absPos) {
+                                // Capture!
+                                otherToken.inBase = true;
+                                otherToken.position = -1;
+                                setMessage(`${PLAYER_NAMES[player.color]} съел фишку ${PLAYER_NAMES[otherPlayer.color]}!`);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Check for win
+            if (player.hasWon()) {
+                showWinner(player);
+                return;
+            }
+
+            // Next turn logic
+            diceRolled = false;
+
+            if (diceValue === 6) {
+                canRollAgain = true;
+                setMessage('Вы выбросили 6! Бросайте ещё раз');
+            } else {
+                canRollAgain = false;
+                nextPlayer();
+            }
+
+            diceValue = 0;
+            renderTokens();
+            updateUI();
+        }
+
+        function rollDice() {
+            if (diceRolled && !canRollAgain) return;
+
+            const dice = document.getElementById('dice');
+            dice.classList.add('rolling');
+
+            setTimeout(() => {
+                diceValue = Math.floor(Math.random() * 6) + 1;
+                dice.classList.remove('rolling');
+                showDiceValue(diceValue);
+                diceRolled = true;
+                canRollAgain = false;
+
+                const player = players[currentPlayer];
+                if (!player.hasMovableToken(diceValue)) {
+                    startAutoSkip();
+                } else {
+                    setMessage('Выберите фишку для хода');
+                }
+
+                highlightMovableTokens();
+                updateUI();
+            }, 500);
+        }
+
+        function showDiceValue(value) {
+            const dice = document.getElementById('dice');
+            dice.innerHTML = '';
+
+            // Create dots based on value
+            const dotPositions = {
+                1: [[50, 50]],
+                2: [[25, 25], [75, 75]],
+                3: [[25, 25], [50, 50], [75, 75]],
+                4: [[25, 25], [75, 25], [25, 75], [75, 75]],
+                5: [[25, 25], [75, 25], [50, 50], [25, 75], [75, 75]],
+                6: [[25, 25], [75, 25], [25, 50], [75, 50], [25, 75], [75, 75]]
+            };
+
+            for (const [x, y] of dotPositions[value]) {
+                const dot = document.createElement('div');
+                dot.className = 'dice-dot';
+                dot.style.left = `${x - 8}%`;
+                dot.style.top = `${y - 8}%`;
+                dice.appendChild(dot);
+            }
+        }
+
+        function applyManualDice() {
+            if (diceRolled && !canRollAgain) return;
+
+            const input = document.getElementById('manual-dice-input');
+            const value = parseInt(input.value);
+
+            if (isNaN(value) || value < 1 || value > 6) {
+                alert('Введите число от 1 до 6');
+                return;
+            }
+
+            diceValue = value;
+            showDiceValue(diceValue);
+            diceRolled = true;
+            canRollAgain = false;
+            input.value = '';
+
+            const player = players[currentPlayer];
+            if (!player.hasMovableToken(diceValue)) {
+                startAutoSkip();
+            } else {
+                setMessage('Выберите фишку для хода');
+            }
+
+            highlightMovableTokens();
+            updateUI();
+        }
+
+        function startAutoSkip() {
+            let remaining = skipDelay;
+            const countdownEl = document.getElementById('countdown');
+
+            setMessage(`Нет возможных ходов. Пропуск через ${remaining}...`);
+            countdownEl.textContent = remaining;
+
+            // Clear any existing timers
+            if (skipTimer) clearTimeout(skipTimer);
+            if (countdownInterval) clearInterval(countdownInterval);
+
+            countdownInterval = setInterval(() => {
+                remaining--;
+                if (remaining > 0) {
+                    countdownEl.textContent = remaining;
+                    setMessage(`Нет возможных ходов. Пропуск через ${remaining}...`);
+                } else {
+                    countdownEl.textContent = '';
+                }
+            }, 1000);
+
+            skipTimer = setTimeout(() => {
+                clearInterval(countdownInterval);
+                countdownEl.textContent = '';
+                autoSkipTurn();
+            }, skipDelay * 1000);
+        }
+
+        function autoSkipTurn() {
+            diceRolled = false;
+            diceValue = 0;
+            nextPlayer();
+            updateUI();
+        }
+
+        function updateDelay() {
+            skipDelay = parseInt(document.getElementById('delay-select').value);
+        }
+
+        function nextPlayer() {
+            currentPlayer = (currentPlayer + 1) % players.length;
+            setMessage('Бросьте кубик');
+        }
+
+        function toggleManualMode() {
+            manualMode = !manualMode;
+            const toggle = document.getElementById('manual-toggle');
+            const manualContainer = document.getElementById('manual-dice-container');
+            const rollBtn = document.getElementById('roll-btn');
+
+            toggle.classList.toggle('active', manualMode);
+            manualContainer.style.display = manualMode ? 'flex' : 'none';
+            rollBtn.style.display = manualMode ? 'none' : 'block';
+        }
+
+        function updateUI() {
+            const player = players[currentPlayer];
+            const indicator = document.getElementById('player-indicator');
+            const nameEl = document.getElementById('player-name');
+
+            indicator.style.background = getColorHex(player.color);
+            nameEl.textContent = PLAYER_NAMES[player.color];
+
+            const rollBtn = document.getElementById('roll-btn');
+            rollBtn.disabled = diceRolled && !canRollAgain;
+        }
+
+        function getColorHex(color) {
+            const colors = {
+                'yellow': '#f7d44c',
+                'blue': '#4ecdc4',
+                'red': '#eb5757',
+                'green': '#6bcb77'
+            };
+            return colors[color];
+        }
+
+        function setMessage(msg) {
+            document.getElementById('message').textContent = msg;
+        }
+
+        function showWinner(player) {
+            const modal = document.getElementById('winner-modal');
+            const text = document.getElementById('winner-text');
+            text.textContent = `${PLAYER_NAMES[player.color]} победил!`;
+            text.style.color = getColorHex(player.color);
+            modal.style.display = 'flex';
+        }
+
+        // Start with setup screen
+        showSetup();
+    </script>
+</body>
+
+</html>
