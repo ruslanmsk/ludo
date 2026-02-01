@@ -543,29 +543,13 @@ function handleTokenClick(token) {
             console.log('[GAME] Захват! Бонусный бросок');
             // Message already set above
         } else if (diceValue === 6) {
-            consecutiveSixes++;
-            if (consecutiveSixes >= 3) {
-                // Three sixes in a row - lose turn
-                console.log('[GAME] Три шестёрки подряд! Ход потерян');
-                setMessage('Три шестёрки подряд! Ход потерян');
-                canRollAgain = false;
-                consecutiveSixes = 0;
-                isAnimating = false; // Важно! Снимаем блокировку
-                setTimeout(() => {
-                    nextPlayer();
-                    diceValue = 0;
-                    renderTokens();
-                    updateUI();
-                }, 1500);
-                return;
+            // consecutiveSixes уже увеличен при броске
+            canRollAgain = true;
+            console.log('[GAME] Шестёрка! consecutiveSixes:', consecutiveSixes, '| canRollAgain:', true);
+            if (captured) {
+                setMessage(`Съели фишку и выбросили 6! (${consecutiveSixes}/3) Бросайте ещё раз`);
             } else {
-                canRollAgain = true;
-                console.log('[GAME] Шестёрка! consecutiveSixes:', consecutiveSixes, '| canRollAgain:', true);
-                if (captured) {
-                    setMessage(`Съели фишку и выбросили 6! (${consecutiveSixes}/3) Бросайте ещё раз`);
-                } else {
-                    setMessage(`Вы выбросили 6! (${consecutiveSixes}/3) Бросайте ещё раз`);
-                }
+                setMessage(`Вы выбросили 6! (${consecutiveSixes}/3) Бросайте ещё раз`);
             }
         } else {
             canRollAgain = false;
@@ -754,6 +738,25 @@ function rollDice() {
         diceRolled = true;
         canRollAgain = false;
 
+        // Проверка на три шестёрки подряд
+        if (diceValue === 6) {
+            consecutiveSixes++;
+            console.log('[DICE] Шестёрка! consecutiveSixes:', consecutiveSixes);
+            
+            if (consecutiveSixes >= 3) {
+                console.log('[DICE] Три шестёрки подряд! Ход потерян');
+                setMessage('Три шестёрки подряд! Ход потерян');
+                consecutiveSixes = 0;
+                setTimeout(() => {
+                    diceRolled = false;
+                    diceValue = 0;
+                    nextPlayer();
+                    updateUI();
+                }, 1500);
+                return;
+            }
+        }
+
         const player = players[currentPlayer];
         const movableTokens = player.getMovableTokens(diceValue);
         
@@ -796,6 +799,25 @@ function applyManualDice() {
     diceRolled = true;
     canRollAgain = false;
     input.value = '';
+
+    // Проверка на три шестёрки подряд
+    if (diceValue === 6) {
+        consecutiveSixes++;
+        console.log('[DICE] Шестёрка! consecutiveSixes:', consecutiveSixes);
+        
+        if (consecutiveSixes >= 3) {
+            console.log('[DICE] Три шестёрки подряд! Ход потерян');
+            setMessage('Три шестёрки подряд! Ход потерян');
+            consecutiveSixes = 0;
+            setTimeout(() => {
+                diceRolled = false;
+                diceValue = 0;
+                nextPlayer();
+                updateUI();
+            }, 1500);
+            return;
+        }
+    }
 
     const player = players[currentPlayer];
     const movableTokens = player.getMovableTokens(diceValue);
