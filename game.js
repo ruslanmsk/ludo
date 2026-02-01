@@ -1,5 +1,5 @@
 // Game version
-const GAME_VERSION = '1.1.0';
+const GAME_VERSION = '1.2.0';
 console.log(`🎲 Лудо v${GAME_VERSION}`);
 
 // Game state
@@ -15,6 +15,8 @@ let skipTimer = null;
 let countdownInterval = null;
 let isAnimating = false; // блокировка во время анимации
 let consecutiveSixes = 0; // счётчик шестёрок подряд
+let autoMoveOnSingleOption = false; // автоход при единственном варианте
+let autoRoll = false; // автобросок кубика
 
 // Player configurations
 const PLAYER_COLORS = ['red', 'blue', 'green', 'yellow'];
@@ -262,7 +264,6 @@ function startGame(count) {
     // Clear any existing timers
     if (skipTimer) clearTimeout(skipTimer);
     if (countdownInterval) clearInterval(countdownInterval);
-    document.getElementById('countdown').textContent = '';
 
     document.getElementById('setup-screen').style.display = 'none';
     document.getElementById('game-container').style.display = 'flex';
@@ -270,6 +271,7 @@ function startGame(count) {
 
     createBoard();
     updateUI();
+    scheduleAutoRoll();
 }
 
 function showSetup() {
@@ -477,7 +479,6 @@ function handleTokenClick(token) {
     // Clear any auto-skip timers
     if (skipTimer) clearTimeout(skipTimer);
     if (countdownInterval) clearInterval(countdownInterval);
-    document.getElementById('countdown').textContent = '';
 
     const player = players[currentPlayer];
     if (token.color !== player.color) {
@@ -578,6 +579,11 @@ function handleTokenClick(token) {
         console.log('[GAME] Ход завершён. isAnimating:', false, '| canRollAgain:', canRollAgain);
         renderTokens();
         updateUI();
+        
+        // Автобросок если можно бросить ещё раз
+        if (canRollAgain) {
+            scheduleAutoRoll();
+        }
     });
 }
 
@@ -749,11 +755,22 @@ function rollDice() {
         canRollAgain = false;
 
         const player = players[currentPlayer];
-        if (!player.hasMovableToken(diceValue)) {
+        const movableTokens = player.getMovableTokens(diceValue);
+        
+        if (movableTokens.length === 0) {
             console.log('[DICE] Нет доступных ходов, автопропуск');
             startAutoSkip();
+        } else if (autoMoveOnSingleOption && isSingleMoveOption(movableTokens)) {
+            console.log('[DICE] Единственный ход, автоперемещение');
+            setMessage('Автоход...');
+            highlightMovableTokens();
+            updateUI();
+            setTimeout(() => {
+                handleTokenClick(movableTokens[0]);
+            }, 300);
+            return;
         } else {
-            console.log('[DICE] Есть доступные ходы');
+            console.log('[DICE] Есть доступные ходы:', movableTokens.length);
             setMessage('Выберите фишку для хода');
         }
 
@@ -781,8 +798,19 @@ function applyManualDice() {
     input.value = '';
 
     const player = players[currentPlayer];
-    if (!player.hasMovableToken(diceValue)) {
+    const movableTokens = player.getMovableTokens(diceValue);
+    
+    if (movableTokens.length === 0) {
         startAutoSkip();
+    } else if (autoMoveOnSingleOption && isSingleMoveOption(movableTokens)) {
+        console.log('[DICE] Единственный ход, автоперемещение');
+        setMessage('Автоход...');
+        highlightMovableTokens();
+        updateUI();
+        setTimeout(() => {
+            handleTokenClick(movableTokens[0]);
+        }, 300);
+        return;
     } else {
         setMessage('Выберите фишку для хода');
     }
@@ -791,12 +819,21 @@ function applyManualDice() {
     updateUI();
 }
 
+// Проверяет, является ли ход единственным вариантом
+// (1 фишка или все фишки на базе - они все выходят на старт)
+function isSingleMoveOption(movableTokens) {
+    if (movableTokens.length === 1) return true;
+    if (movableTokens.length === 0) return false;
+    
+    // Если все доступные фишки на базе - это единственный вариант
+    // (все выйдут на одну и ту же стартовую позицию)
+    return movableTokens.every(token => token.inBase);
+}
+
 function startAutoSkip() {
     let remaining = skipDelay;
-    const countdownEl = document.getElementById('countdown');
 
     setMessage(`Нет возможных ходов. Пропуск через ${remaining}...`);
-    countdownEl.textContent = remaining;
 
     // Clear any existing timers
     if (skipTimer) clearTimeout(skipTimer);
@@ -805,16 +842,12 @@ function startAutoSkip() {
     countdownInterval = setInterval(() => {
         remaining--;
         if (remaining > 0) {
-            countdownEl.textContent = remaining;
             setMessage(`Нет возможных ходов. Пропуск через ${remaining}...`);
-        } else {
-            countdownEl.textContent = '';
         }
     }, 1000);
 
     skipTimer = setTimeout(() => {
         clearInterval(countdownInterval);
-        countdownEl.textContent = '';
         autoSkipTurn();
     }, skipDelay * 1000);
 }
@@ -837,6 +870,7 @@ function nextPlayer() {
     consecutiveSixes = 0; // сброс счётчика шестёрок
     console.log('[GAME] nextPlayer:', prevPlayer, '->', players[currentPlayer]?.color);
     setMessage('Бросьте кубик');
+    scheduleAutoRoll();
 }
 
 function toggleManualMode() {
@@ -847,8 +881,53 @@ function toggleManualMode() {
 
     toggle.classList.toggle('active', manualMode);
     manualContainer.style.display = manualMode ? 'flex' : 'none';
-    rollBtn.style.display = manualMode ? 'none' : 'block';
+    
+    // Показать кнопку только если не ручной режим и не автобросок
+    if (manualMode) {
+        rollBtn.style.display = 'none';
+    } else {
+        rollBtn.style.display = autoRoll ? 'none' : 'block';
+    }
+    
     saveGame();
+}
+
+function toggleAutoMove() {
+    autoMoveOnSingleOption = !autoMoveOnSingleOption;
+    const toggle = document.getElementById('auto-move-toggle');
+    toggle.classList.toggle('active', autoMoveOnSingleOption);
+    saveGame();
+}
+
+function toggleAutoRoll() {
+    autoRoll = !autoRoll;
+    const toggle = document.getElementById('auto-roll-toggle');
+    const rollBtn = document.getElementById('roll-btn');
+    
+    toggle.classList.toggle('active', autoRoll);
+    
+    // Скрыть/показать кнопку броска
+    if (!manualMode) {
+        rollBtn.style.display = autoRoll ? 'none' : 'block';
+    }
+    
+    saveGame();
+    
+    // Если включили автобросок и сейчас можно бросить - бросаем
+    if (autoRoll && players.length > 0) {
+        scheduleAutoRoll();
+    }
+}
+
+function scheduleAutoRoll() {
+    if (!autoRoll || manualMode) return;
+    
+    setTimeout(() => {
+        if (!autoRoll || manualMode) return;
+        if (diceRolled && !canRollAgain) return;
+        if (isAnimating) return;
+        rollDice();
+    }, 500);
 }
 
 function openSettings() {
@@ -861,18 +940,20 @@ function closeSettings() {
 
 function updateUI() {
     const player = players[currentPlayer];
-    const indicator = document.getElementById('player-indicator');
-    const nameEl = document.getElementById('player-name');
-
-    indicator.style.background = getColorHex(player.color);
-    nameEl.textContent = PLAYER_NAMES[player.color];
 
     // Update background theme based on current player
     document.body.classList.remove('theme-red', 'theme-blue', 'theme-green', 'theme-yellow');
     document.body.classList.add(`theme-${player.color}`);
 
     const rollBtn = document.getElementById('roll-btn');
-    rollBtn.disabled = diceRolled && !canRollAgain;
+    
+    // Скрыть кнопку если автобросок или ручной режим
+    if (autoRoll && !manualMode) {
+        rollBtn.style.display = 'none';
+    } else if (!manualMode) {
+        rollBtn.style.display = 'block';
+        rollBtn.disabled = diceRolled && !canRollAgain;
+    }
 
     // Auto-save game state
     saveGame();
@@ -889,7 +970,8 @@ function getColorHex(color) {
 }
 
 function setMessage(msg) {
-    document.getElementById('message').textContent = msg;
+    // Info panel removed - messages logged to console instead
+    console.log('[MSG]', msg);
 }
 
 function showWinner(player) {
@@ -914,6 +996,8 @@ function saveGame() {
         consecutiveSixes: consecutiveSixes,
         skipDelay: skipDelay,
         manualMode: manualMode,
+        autoMoveOnSingleOption: autoMoveOnSingleOption,
+        autoRoll: autoRoll,
         players: players.map(p => ({
             color: p.color,
             tokens: p.tokens.map(t => ({
@@ -944,6 +1028,8 @@ function loadGame() {
         consecutiveSixes = state.consecutiveSixes || 0;
         skipDelay = state.skipDelay || 1;
         manualMode = state.manualMode || false;
+        autoMoveOnSingleOption = state.autoMoveOnSingleOption || false;
+        autoRoll = state.autoRoll || false;
 
         // Restore players
         players = [];
@@ -963,6 +1049,15 @@ function loadGame() {
             document.getElementById('manual-toggle').classList.add('active');
             document.getElementById('manual-dice-container').style.display = 'flex';
             document.getElementById('roll-btn').style.display = 'none';
+        }
+        if (autoMoveOnSingleOption) {
+            document.getElementById('auto-move-toggle').classList.add('active');
+        }
+        if (autoRoll) {
+            document.getElementById('auto-roll-toggle').classList.add('active');
+            if (!manualMode) {
+                document.getElementById('roll-btn').style.display = 'none';
+            }
         }
 
         return true;
@@ -991,6 +1086,11 @@ function init() {
         if (diceRolled && diceValue > 0) {
             document.getElementById('dice-display').textContent = diceValue;
             highlightMovableTokens();
+        }
+        
+        // Автобросок при загрузке если нужно бросить
+        if (!diceRolled || canRollAgain) {
+            scheduleAutoRoll();
         }
     } else {
         showSetup();

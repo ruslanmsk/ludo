@@ -23,15 +23,6 @@
 
     <!-- Game Container -->
     <div id="game-container">
-        <div id="info-panel">
-            <div class="current-player">
-                <span>Ход:</span>
-                <div class="player-indicator" id="player-indicator"></div>
-                <span id="player-name"></span>
-            </div>
-            <div id="message">Бросьте кубик</div>
-        </div>
-
         <div id="board"></div>
 
         <div id="controls">
@@ -44,8 +35,6 @@
                 <input type="number" id="manual-dice-input" min="1" max="6" placeholder="1-6">
                 <button id="manual-dice-btn" onclick="applyManualDice()">Применить</button>
             </div>
-
-            <span id="countdown"></span>
 
             <button id="settings-btn" onclick="openSettings()">⚙</button>
             <button id="new-game-btn" onclick="showSetup()">Новая игра</button>
@@ -79,6 +68,16 @@
                     <option value="4">4 сек</option>
                     <option value="5">5 сек</option>
                 </select>
+            </div>
+
+            <div class="settings-row">
+                <label>Автоход при единственном варианте</label>
+                <div class="toggle" id="auto-move-toggle" onclick="toggleAutoMove()"></div>
+            </div>
+
+            <div class="settings-row">
+                <label>Автобросок кубика</label>
+                <div class="toggle" id="auto-roll-toggle" onclick="toggleAutoRoll()"></div>
             </div>
 
             <button class="settings-close-btn" onclick="closeSettings()">Закрыть</button>
