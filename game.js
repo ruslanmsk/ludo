@@ -727,14 +727,14 @@ function rollDice() {
     const diceDisplay = document.getElementById('dice-display');
 
     diceDisplay.classList.add('rolling');
-    diceDisplay.textContent = '?';
+    renderDiceFace('?');
 
     setTimeout(() => {
         diceValue = Math.floor(Math.random() * 6) + 1;
         console.log('[DICE] Выпало:', diceValue, '| Игрок:', players[currentPlayer]?.color, '| consecutiveSixes:', consecutiveSixes);
 
         diceDisplay.classList.remove('rolling');
-        diceDisplay.textContent = diceValue;
+        renderDiceFace(diceValue);
         diceRolled = true;
         canRollAgain = false;
 
@@ -782,23 +782,14 @@ function rollDice() {
     }, 800);
 }
 
-function applyManualDice() {
+function applyManualDice(value) {
     if (diceRolled && !canRollAgain) return;
     if (isAnimating) return;
 
-    const input = document.getElementById('manual-dice-input');
-    const value = parseInt(input.value);
-
-    if (isNaN(value) || value < 1 || value > 6) {
-        alert('Введите число от 1 до 6');
-        return;
-    }
-
     diceValue = value;
-    document.getElementById('dice-display').textContent = diceValue;
+    renderDiceFace(diceValue);
     diceRolled = true;
     canRollAgain = false;
-    input.value = '';
 
     // Проверка на три шестёрки подряд
     if (diceValue === 6) {
@@ -977,8 +968,36 @@ function updateUI() {
         rollBtn.disabled = diceRolled && !canRollAgain;
     }
 
+    // Блокировать/разблокировать ручные кубики
+    const canUseManualDice = !diceRolled || canRollAgain;
+    document.querySelectorAll('.manual-dice').forEach(d => {
+        d.classList.toggle('disabled', !canUseManualDice || isAnimating);
+    });
+
     // Auto-save game state
     saveGame();
+}
+
+// SVG точки для кубика
+const DICE_DOTS = {
+    1: [[25,25]],
+    2: [[37,13],[13,37]],
+    3: [[37,13],[25,25],[13,37]],
+    4: [[13,13],[37,13],[13,37],[37,37]],
+    5: [[13,13],[37,13],[25,25],[13,37],[37,37]],
+    6: [[13,13],[37,13],[13,25],[37,25],[13,37],[37,37]]
+};
+
+function renderDiceFace(value) {
+    const el = document.getElementById('dice-display');
+    if (!value || value === '?') {
+        el.innerHTML = '?';
+        return;
+    }
+    const dots = DICE_DOTS[value];
+    if (!dots) { el.innerHTML = value; return; }
+    const circles = dots.map(([cx, cy]) => `<circle cx="${cx}" cy="${cy}" r="5" fill="#333"/>`).join('');
+    el.innerHTML = `<svg viewBox="0 0 50 50" style="width:40px;height:40px">${circles}</svg>`;
 }
 
 function getColorHex(color) {
@@ -992,7 +1011,6 @@ function getColorHex(color) {
 }
 
 function setMessage(msg) {
-    // Info panel removed - messages logged to console instead
     console.log('[MSG]', msg);
 }
 
@@ -1106,7 +1124,7 @@ function init() {
         updateUI();
 
         if (diceRolled && diceValue > 0) {
-            document.getElementById('dice-display').textContent = diceValue;
+            renderDiceFace(diceValue);
             highlightMovableTokens();
         }
         
